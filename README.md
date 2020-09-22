@@ -1,4 +1,4 @@
 # Yolov3
-darknet53 as backbone
-yolov3 as feature extractor
-structure implemented only
+1. darknet53 as backbone
+2. yolov3 as feature extractor
+: structure ony implemented
