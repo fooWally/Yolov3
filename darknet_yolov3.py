@@ -12,8 +12,9 @@ clear_session()
 def Yolov3(inputs):
     
     NUM_CLASS = 80 # for ms-coco dataset
-    num_filters = (NUM_CLASS + 5)*3 
-    # darknet53 as feature extractor 
+    # tx,ty,tw,th + objectness + num_class for one anchor box
+    num_filters = (4 + 1 + NUM_CLASS)*3 
+    # darknet53 as feature extractor : 52x52 grids, 26x26 grids, 13x13 grids
     feat52, feat26, feat13 = darknet53(inputs)
 
     for i in range(3):
