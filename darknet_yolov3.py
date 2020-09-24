@@ -13,6 +13,7 @@ def Yolov3(inputs):
     
     NUM_CLASS = 80 # for ms-coco dataset
     # tx,ty,tw,th + objectness + num_class for one anchor box
+    # predict 3 anchor boxes for each scale. Hence multiply by 3
     num_filters = (4 + 1 + NUM_CLASS)*3 
     # darknet53 as feature extractor : 52x52 grids, 26x26 grids, 13x13 grids
     feat52, feat26, feat13 = darknet53(inputs)
