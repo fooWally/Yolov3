@@ -25,7 +25,7 @@ def Yolov3(inputs):
 
     x13 = conv2d(x13, 256, 1)
     x13 = layers.UpSampling2D(size=(2,2))(cache_x13)
-    x_concat1 = tf.concat([x13, feat26], axis=-1)
+    x_concat1 = layers.Concatenate(axis=-1)([x13, feat26])
 
     for i in range(3):
         x26 = conv2d(x_concat1, 256, 1)
@@ -35,7 +35,8 @@ def Yolov3(inputs):
     medium_feat = conv2d(x26, num_filters, 1, activate=False, bn=False)
 
     x26 = layers.UpSampling2D(size=(2,2))(cache_x26)
-    x_concat2 = tf.concat([x26, feat52], axis=-1)
+    
+    x_concat2 = layers.Concatenate(axis=-1)([x26, feat52]) # or #x_concat2 = tf.concat([x26, feat52], axis=-1)
 
     for i in range(3):
         x52 = conv2d(x_concat2, 128, 1)
