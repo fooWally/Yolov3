@@ -1,3 +1,4 @@
+#https://towardsdatascience.com/dive-really-deep-into-yolo-v3-a-beginners-guide-9e3d2666280e
 import tensorflow as tf
 from darknet import *
 from tensorflow.keras.backend import clear_session
@@ -5,15 +6,14 @@ from tensorflow.keras import layers
 clear_session()
 #########################################
 #                                       #
-#   According to the architecture of    #
-#   feature extraction:                 #
-#   darknet53 as feature extractor      #
+#   Yolov3 as multi-scale detector      #
 #                                       #
 #########################################
 def Yolov3(inputs):
+    
     NUM_CLASS = 80 # for ms-coco dataset
     num_filters = (NUM_CLASS + 5)*3 
-
+    # darknet53 as feature extractor 
     feat52, feat26, feat13 = darknet53(inputs)
 
     for i in range(3):
