@@ -1,8 +1,8 @@
 #https://towardsdatascience.com/dive-really-deep-into-yolo-v3-a-beginners-guide-9e3d2666280e
-import tensorflow as tf
+#import tensorflow as tf
 from darknet import *
 from tensorflow.keras.backend import clear_session
-from tensorflow.keras import layers
+from tensorflow.keras import layers, Model
 clear_session()
 #########################################
 #                                       #
@@ -10,56 +10,58 @@ clear_session()
 #                                       #
 #########################################
 def Yolov3(inputs):
-    
     NUM_CLASS = 80 # for ms-coco dataset
     # tx,ty,tw,th + objectness + num_class for one anchor box
     # predict 3 anchor boxes for each scale. Hence multiply by 3
-    num_filters = (4 + 1 + NUM_CLASS)*3 
+    num_filters = (NUM_CLASS + 5)*3 
     # darknet53 as feature extractor : 52x52 grids, 26x26 grids, 13x13 grids
-    feat52, feat26, feat13 = darknet53(inputs)
+    x52, x26, x13 = darknet53(inputs)
+    x = conv2d(x13, 512, 1)
+    x = conv2d(x, 1024, 3)
+    x = conv2d(x, 512, 1)
+    x = conv2d(x, 1024, 3)
+    x = conv2d(x, 512, 1)
+    y_large = conv2d(x, 1024, 3)
+    y_large = conv2d(y_large, num_filters, 1)#, activate=False, bn=False)
 
-    for i in range(3):
-        x13 = conv2d(feat13, 512, 1)
-        if i == 2: cache_x13 = x13
-        x13 = conv2d(x13, 1024, 3)
-        feat13 = x13
-    large_feat = conv2d(x13, num_filters, 1, activate=False, bn=False)
+    x = conv2d(x, 256, 1)
+    x = layers.UpSampling2D(size=(2,2))(x)
+    x = layers.Concatenate()([x, x26])
 
-    x13 = conv2d(x13, 256, 1)
-    x13 = layers.UpSampling2D(size=(2,2))(cache_x13)
-    x_concat1 = layers.Concatenate(axis=-1)([x13, feat26])
+    x = conv2d(x, 256, 1)
+    x = conv2d(x, 512, 3)
+    x = conv2d(x, 256, 1)
+    x = conv2d(x, 512, 3)
+    x = conv2d(x, 256, 1)
+    y_medium = conv2d(x, 512, 3)
+    y_medium = conv2d(y_medium, num_filters, 1)#, activate=False, bn=False)
 
-    for i in range(3):
-        x26 = conv2d(x_concat1, 256, 1)
-        if i == 2: cache_x26 = x26
-        x26 = conv2d(x26, 512, 3)
-        x_concat1 = x26
-    medium_feat = conv2d(x26, num_filters, 1, activate=False, bn=False)
+    x = conv2d(x, 128, 1)
+    x = layers.UpSampling2D(size=(2,2))(x)
+    x = layers.Concatenate()([x, x52])
 
-    x26 = layers.UpSampling2D(size=(2,2))(cache_x26)
+    x = conv2d(x, 128, 1)
+    x = conv2d(x, 256, 3)
+    x = conv2d(x, 128, 1)
+    x = conv2d(x, 256, 3)
+    x = conv2d(x, 128, 1)
+    y_small = conv2d(x, 256, 3)
+    y_small = conv2d(y_small, num_filters, 1)#, activate=False, bn=False)
     
-    x_concat2 = layers.Concatenate(axis=-1)([x26, feat52]) # or #x_concat2 = tf.concat([x26, feat52], axis=-1)
+    return [y_small, y_medium, y_large]
 
-    for i in range(3):
-        x52 = conv2d(x_concat2, 128, 1)
-        x52 = conv2d(x52, 256, 3)
-        x_concat2 = x52
-        
-    small_feat = conv2d(x52, num_filters, 1, activate=False, bn=False)
-
-    return [small_feat, medium_feat, large_feat]
-
-############################
+################################################################
 #
-#   TEST Yolov3(inputs)
+#   TEST Yolo3(inputs)
 #
-##input_size = 416 
-##input_shape = [input_size, input_size, 3]
-##inputs = layers.Input(shape=input_shape)
-##print('inputs =', inputs)
-##small_feat, medium_feat, large_feat = Yolov3(inputs)
-##
-### num_filters = 255 = 3*(4+1+NUM_CLASSES)
-##print(small_feat)   #(None, 52, 52, 255)
-##print(medium_feat)  #(None, 26, 26, 255)
-##print(large_feat)   #(None, 13, 13, 255)
+input_shape = [416, 416, 3]
+inputs = layers.Input(shape=input_shape)
+print('inputs =', inputs)
+outputs = Yolov3(inputs)
+model = Model(inputs, outputs)
+#model.summary()
+y_small, y_medium, y_large = outputs
+# num_filters = 255 = 3*(4+1+NUM_CLASSES)
+print(y_small)   #(None, 52, 52, 255)
+print(y_medium)  #(None, 26, 26, 255)
+print(y_large)   #(None, 13, 13, 255)
