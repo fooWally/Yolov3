@@ -1,0 +1,2 @@
+# SIKP THIS LINE:: xmin, ymin, xmax, ymax, label
+E:\keras_yolob\test_images\000001.jpg 226,251,248,273,6 150,36,195,110,1
